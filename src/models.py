@@ -25,6 +25,13 @@ class User(db.Model):
             "email": self.email
         }
 
+    def serialize_favorites(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "favorites": [favorite.serialize() for favorite in self.favorites]
+        }
+
 
 class Favorites(db.Model):
     __tablename__ = "favorites"

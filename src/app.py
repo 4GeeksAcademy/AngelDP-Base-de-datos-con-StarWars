@@ -9,14 +9,15 @@ from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User, People, Starship, Vehicle, Specie, Planet
-#from models import Person
+# from models import Person
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url.replace("postgres://", "postgresql://")
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url.replace(
+        "postgres://", "postgresql://")
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/test.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -27,11 +28,15 @@ CORS(app)
 setup_admin(app)
 
 # Handle/serialize errors like a JSON object
+
+
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 # generate sitemap with all your endpoints
+
+
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
@@ -47,7 +52,7 @@ def get_all_people():
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "People succesfully",
         "people": people_serialized
@@ -63,7 +68,7 @@ def get_person(people_id):
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "person found",
         "people": person.serialize()
@@ -80,7 +85,7 @@ def get_all_starships():
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "Starships succesfully",
         "starship": starship_serialized
@@ -96,7 +101,7 @@ def get_starship(starship_id):
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "starship found",
         "starship": starship.serialize()
@@ -113,7 +118,7 @@ def get_all_vehicles():
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "Vehicles succesfully",
         "vehicle": vehicle_serialized
@@ -129,7 +134,7 @@ def get_vehicle(vehicle_id):
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "starship found",
         "vehicle": vehicle.serialize()
@@ -146,7 +151,7 @@ def get_all_species():
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "Vehicles succesfully",
         "specie": specie_serialized
@@ -162,7 +167,7 @@ def get_specie(specie_id):
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "starship found",
         "specie": specie.serialize()
@@ -179,7 +184,7 @@ def get_all_planets():
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "Vehicles succesfully",
         "planet": planet_serialized
@@ -195,25 +200,70 @@ def get_planet(planet_id):
         return jsonify({
             "msg": "Not found"
         }), 404
-    
+
     return jsonify({
         "msg": "starship found",
         "planet": planet.serialize()
     }), 200
 
 
-
 @app.route('/users', methods=['GET'])
 def get_all_users():
 
     users = User.query.all()
-    user_serialized = [user.serialize() for user in users]
 
     return jsonify({
         "msg": "User retrived successfully",
-        "users": user_serialized
+        "users": [user.serialize() for user in users]
     }), 200
 
+
+@app.route('/users/favorites/<int:user_id>', methods=["GET"])
+def get_user_fav(user_id):
+
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({
+            "msg": "Not found"
+        }), 404
+
+    return jsonify({
+        "msg": "User found succesfully",
+        "favorite": user.serialize_favorites()
+    }), 200
+
+
+@app.route('/users', methods=['POST'])
+def new_user():
+
+    request_data = request.get_json()
+
+    if not request_data.get('email') or not request_data.get('password') or not request_data.get('username'):
+        return jsonify({
+            "msg": "Email, password and username are required"
+            }), 400
+
+    existing_user = User.query.filter_by(email = request_data.get('email')).first()
+
+    if existing_user:
+        return jsonify({"msg": "User already exists"}), 403
+
+    new_user = User(
+
+        password = request_data["password"],
+        username = request_data["username"],
+        firstname = request_data["firstname"],
+        lastname = request_data["lastname"],
+        email = request_data["email"]
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({
+        "msg" : "User created succesfully"
+    }), 201
 
 
 # this only runs if `$ python src/app.py` is executed
