@@ -6,7 +6,7 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
-    __tablename__ = "user"
+    __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     username = Column(String(50), unique=True, nullable=False)
     firstname = Column(String(50))
@@ -14,9 +14,9 @@ class User(db.Model):
     email = Column(String(50), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
 
-    favorites = relationship("Favorites", back_populates="user")
+    favorites = relationship("Favorite", back_populates="user")
 
-    def serialize(self):
+    def serialize_user(self):
         return {
             "id": self.id,
             "username": self.username,
@@ -25,61 +25,55 @@ class User(db.Model):
             "email": self.email
         }
 
-    def serialize_favorites(self):
-        return {
-            "id": self.id,
-            "username": self.username,
-            "favorites": [favorite.serialize() for favorite in self.favorites]
-        }
 
 
-class Favorites(db.Model):
+class Favorite(db.Model):
     __tablename__ = "favorites"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    specie_id = Column(Integer, ForeignKey("specie.id"), nullable=True)
-    vehicle_id = Column(Integer, ForeignKey("vehicle.id"), nullable=True)
-    starship_id = Column(Integer, ForeignKey("starship.id"), nullable=True)
-    people_id = Column(Integer, ForeignKey("people.id"), nullable=True)
-    planet_id = Column(Integer, ForeignKey("planet.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    specie_id = Column(Integer, ForeignKey("species.id"), nullable=True)
+    vehicle_id = Column(Integer, ForeignKey("vehicles.id"), nullable=True)
+    starship_id = Column(Integer, ForeignKey("starships.id"), nullable=True)
+    person_id = Column(Integer, ForeignKey("people.id"), nullable=True)
+    planet_id = Column(Integer, ForeignKey("planets.id"), nullable=True)
 
     user = relationship("User", back_populates="favorites")
     planet = relationship("Planet", back_populates="favorites")
     specie = relationship("Specie", back_populates="favorites")
     vehicle = relationship("Vehicle", back_populates="favorites")
     starship = relationship("Starship", back_populates="favorites")
-    people = relationship("People", back_populates="favorites")
+    person = relationship("Person", back_populates="favorites")
 
-    def serialize(self):
+    def serialize_favorite(self):
         return {
             "id": self.id,
             "user_id": self.user_id,
             "specie_id": self.specie_id,
             "vehicle_id": self.vehicle_id,
             "starship_id": self.starship_id,
-            "people_id": self.people_id,
+            "person_id": self.person_id,
             "planet_id": self.planet_id
         }
 
 
 class Planet(db.Model):
-    __tablename__ = "planet"
+    __tablename__ = "planets"
     id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
     diameter = Column(Integer)
     gravity = Column(Float)
-    name = Column(String(50))
     population = Column(Integer)
-    terrain = Column(String(50))
-    climate = Column(String(50))
+    terrain = Column(String(100))
+    climate = Column(String(100))
 
-    favorites = relationship("Favorites", back_populates="planet")
+    favorites = relationship("Favorite", back_populates="planet")
 
-    def serialize(self):
+    def serialize_planet(self):
         return {
             "id": self.id,
+            "name": self.name,
             "diameter": self.diameter,
             "gravity": self.gravity,
-            "name": self.name,
             "population": self.population,
             "terrain": self.terrain,
             "climate": self.climate
@@ -87,23 +81,23 @@ class Planet(db.Model):
 
 
 class Specie(db.Model):
-    __tablename__ = "specie"
+    __tablename__ = "species"
     id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
     hair_color = Column(String(50))
     height = Column(Float)
-    name = Column(String(50))
     skin_color = Column(String(50))
     language = Column(String(50))
     average_life = Column(Integer)
 
-    favorites = relationship("Favorites", back_populates="specie")
+    favorites = relationship("Favorite", back_populates="specie")
 
-    def serialize(self):
+    def serialize_specie(self):
         return {
             "id": self.id,
+            "name": self.name,
             "hair_color": self.hair_color,
             "height": self.height,
-            "name": self.name,
             "skin_color": self.skin_color,
             "language": self.language,
             "average_life": self.average_life
@@ -111,71 +105,75 @@ class Specie(db.Model):
 
 
 class Vehicle(db.Model):
-    __tablename__ = "vehicle"
+    __tablename__ = "vehicles"
     id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
     consumable = Column(String(50))
     crew = Column(Integer)
-    name = Column(String(50))
     passengers = Column(Integer)
     class_name = Column(String(50))
     cargo_cap = Column(Integer)
+    terrain = Column(String(50))
 
-    favorites = relationship("Favorites", back_populates="vehicle")
+    favorites = relationship("Favorite", back_populates="vehicle")
 
-    def serialize(self):
+    def serialize_vehicle(self):
         return {
             "id": self.id,
+            "name": self.name,
             "consumable": self.consumable,
             "crew": self.crew,
-            "name": self.name,
             "passengers": self.passengers,
             "class_name": self.class_name,
-            "cargo_cap": self.cargo_cap
+            "cargo_cap": self.cargo_cap,
+            "terrain": self.terrain
         }
 
 
 class Starship(db.Model):
-    __tablename__ = "starship"
+    __tablename__ = "starships"
     id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
     consumable = Column(String(50))
     crew = Column(Integer)
-    name = Column(String(50))
     passengers = Column(Integer)
     class_name = Column(String(50))
     cargo_cap = Column(Integer)
+    hyperdrive_rating = Column(Float)
 
-    favorites = relationship("Favorites", back_populates="starship")
+    favorites = relationship("Favorite", back_populates="starship")
 
-    def serialize(self):
+    def serialize_starship(self):
         return {
             "id": self.id,
+            "name": self.name,
             "consumable": self.consumable,
             "crew": self.crew,
-            "name": self.name,
             "passengers": self.passengers,
             "class_name": self.class_name,
-            "cargo_cap": self.cargo_cap
+            "cargo_cap": self.cargo_cap,
+            "hyperdrive_rating": self.hyperdrive_rating
         }
 
 
-class People(db.Model):
+class Person(db.Model):
     __tablename__ = "people"
     id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
     hair_color = Column(String(50))
     height = Column(Float)
-    name = Column(String(50))
     skin_color = Column(String(50))
     eye_color = Column(String(50))
     gender = Column(String(50))
 
-    favorites = relationship("Favorites", back_populates="people")
+    favorites = relationship("Favorite", back_populates="person")
 
-    def serialize(self):
+    def serialize_person(self):
         return {
             "id": self.id,
+            "name": self.name,
             "hair_color": self.hair_color,
             "height": self.height,
-            "name": self.name,
             "skin_color": self.skin_color,
             "eye_color": self.eye_color,
             "gender": self.gender
